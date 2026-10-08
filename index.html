@@ -14,7 +14,8 @@
     .intro { position: fixed; z-index: 5; inset: 0 0 auto; padding: 16px 18px 14px; color: #fff; background: linear-gradient(180deg, rgba(7,27,25,.95), rgba(7,27,25,.6), transparent); pointer-events: none; }
     .intro h1 { margin: 0 0 3px; font-size: 22px; }
     .intro p { margin: 0; max-width: 54ch; font-size: 14px; line-height: 1.5; color: #e5eee9; }
-    .card-link { display: inline-block; margin-top: 8px; padding: 8px 12px; border-radius: 10px; color: #102f2a; background: #d6bb6f; text-decoration: none; font-weight: 700; pointer-events: auto; }
+    .start-button, .card-link { display: inline-block; margin-top: 8px; padding: 10px 14px; border: 0; border-radius: 10px; color: #102f2a; background: #d6bb6f; text-decoration: none; font: inherit; font-weight: 700; pointer-events: auto; cursor: pointer; }
+    .start-button:disabled { opacity: .65; cursor: wait; }
     .status { position: fixed; z-index: 6; inset: auto 16px 22px; padding: 12px 14px; border: 1px solid rgba(255,255,255,.2); border-radius: 14px; background: rgba(7,27,25,.86); color: white; text-align: center; font-size: 14px; line-height: 1.5; backdrop-filter: blur(8px); }
     .badge { display: inline-block; margin-inline-start: 6px; padding: 2px 8px; border-radius: 20px; color: #122c27; background: #d9c178; font-size: 12px; font-weight: 700; }
     .hint { opacity: .86; font-size: 12px !important; margin-top: 4px !important; }
@@ -24,13 +25,14 @@
 <body>
   <header class="intro">
     <h1>نَسَق <span class="badge">نموذج تقني</span></h1>
-    <p>اسمحي للمتصفح باستخدام الكاميرا، ثم وجّهيها إلى بطاقة الاختبار.</p>
+    <p>اضغطي زر التشغيل، واسمحي للمتصفح باستخدام الكاميرا، ثم وجّهيها إلى بطاقة الاختبار.</p>
+    <button class="start-button" id="start-ar" type="button">ابدئي تجربة الواقع المعزّز</button>
     <a class="card-link" href="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/card-example/card.png" target="_blank" rel="noopener">افتحي بطاقة الاختبار للطباعة</a>
     <p class="hint">الأفاتار تجريبي ولا يتحدث بصوتك بعد. كل شخص يشاهده عبر هاتفه.</p>
   </header>
-  <div class="status" id="status" role="status" aria-live="polite">جارٍ تشغيل الكاميرا… إذا لم يظهر طلب الإذن، افتحي الصفحة عبر رابط HTTPS.</div>
+  <div class="status" id="status" role="status" aria-live="polite">اضغطي «ابدئي تجربة الواقع المعزّز» لطلب إذن الكاميرا وتشغيلها.</div>
   <a-scene
-    mindar-image="imageTargetSrc: https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/card-example/card.mind; autoStart: true; uiLoading: no; uiScanning: no; uiError: no;"
+    mindar-image="imageTargetSrc: https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/card-example/card.mind; autoStart: false; uiLoading: no; uiScanning: no; uiError: no;"
     color-space="sRGB"
     renderer="colorManagement: true, physicallyCorrectLights"
     vr-mode-ui="enabled: false"
@@ -62,10 +64,26 @@
   <script>
     const status = document.getElementById('status');
     const target = document.getElementById('target');
+    const scene = document.querySelector('a-scene');
+    const startButton = document.getElementById('start-ar');
     target.addEventListener('targetFound', () => { status.textContent = 'تم العثور على العلامة — حرّكي الهاتف ببطء لمشاهدة الأفاتار فوقها.'; });
     target.addEventListener('targetLost', () => { status.textContent = 'وجّهي الكاميرا إلى بطاقة الاختبار لإظهار الأفاتار.'; });
-    document.querySelector('a-scene').addEventListener('arReady', () => { status.textContent = 'الكاميرا جاهزة — وجّهي الهاتف إلى بطاقة الاختبار.'; });
-    document.querySelector('a-scene').addEventListener('arError', () => { status.textContent = 'تعذّر تشغيل الكاميرا. تأكدي من الإذن وافتحي الصفحة عبر HTTPS وعلى متصفح الهاتف.'; });
+    scene.addEventListener('arReady', () => { status.textContent = 'الكاميرا جاهزة — وجّهي الهاتف إلى بطاقة الاختبار المطبوعة.'; startButton.hidden = true; });
+    scene.addEventListener('arError', () => { status.textContent = 'تعذّر تشغيل الكاميرا. اسمحي بإذن الكاميرا من إعدادات الموقع، ثم أعيدي المحاولة.'; startButton.disabled = false; });
+    startButton.addEventListener('click', async () => {
+      const arSystem = scene.systems['mindar-image-system'];
+      if (!arSystem) { status.textContent = 'الصفحة لم تكتمل بعد. انتظري قليلًا ثم أعيدي المحاولة.'; return; }
+      startButton.disabled = true;
+      status.textContent = 'جارٍ طلب إذن الكاميرا… اختاري «السماح» إذا ظهر الطلب.';
+      try {
+        await arSystem.start();
+        status.textContent = 'بدأ تشغيل الكاميرا — وجّهيها إلى بطاقة الاختبار المطبوعة.';
+      } catch (error) {
+        console.error('MindAR start failed:', error);
+        status.textContent = 'لم تبدأ الكاميرا. تحققي من إذن الموقع واستخدمي Chrome أو Safari عبر HTTPS.';
+        startButton.disabled = false;
+      }
+    });
   </script>
 </body>
 </html>
