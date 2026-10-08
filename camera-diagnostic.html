@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#0d332e">
+  <title>نَسَق | تجربة أفاتار الواقع المعزّز</title>
+  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #071b19; }
+    .intro { position: fixed; z-index: 5; inset: 0 0 auto; padding: 16px 18px 14px; color: #fff; background: linear-gradient(180deg, rgba(7,27,25,.95), rgba(7,27,25,.6), transparent); pointer-events: none; }
+    .intro h1 { margin: 0 0 3px; font-size: 22px; }
+    .intro p { margin: 0; max-width: 54ch; font-size: 14px; line-height: 1.5; color: #e5eee9; }
+    .start-button, .card-link { display: inline-block; margin-top: 8px; padding: 10px 14px; border: 0; border-radius: 10px; color: #102f2a; background: #d6bb6f; text-decoration: none; font: inherit; font-weight: 700; pointer-events: auto; cursor: pointer; }
+    .start-button:disabled { opacity: .65; cursor: wait; }
+    .status { position: fixed; z-index: 6; inset: auto 16px 22px; padding: 12px 14px; border: 1px solid rgba(255,255,255,.2); border-radius: 14px; background: rgba(7,27,25,.86); color: white; text-align: center; font-size: 14px; line-height: 1.5; backdrop-filter: blur(8px); }
+    .badge { display: inline-block; margin-inline-start: 6px; padding: 2px 8px; border-radius: 20px; color: #122c27; background: #d9c178; font-size: 12px; font-weight: 700; }
+    .hint { opacity: .86; font-size: 12px !important; margin-top: 4px !important; }
+    a-scene { position: fixed; inset: 0; }
+  </style>
+</head>
+<body>
+  <header class="intro">
+    <h1>نَسَق <span class="badge">نموذج تقني</span></h1>
+    <p>اضغطي زر التشغيل، واسمحي للمتصفح باستخدام الكاميرا، ثم وجّهيها إلى بطاقة الاختبار.</p>
+    <button class="start-button" id="start-ar" type="button">ابدئي تجربة الواقع المعزّز</button>
+    <a class="card-link" href="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/card-example/card.png" target="_blank" rel="noopener">افتحي بطاقة الاختبار للطباعة</a>
+    <p class="hint">الأفاتار تجريبي ولا يتحدث بصوتك بعد. كل شخص يشاهده عبر هاتفه.</p>
+  </header>
+  <div class="status" id="status" role="status" aria-live="polite">اضغطي «ابدئي تجربة الواقع المعزّز» لطلب إذن الكاميرا وتشغيلها.</div>
+  <a-scene
+    mindar-image="imageTargetSrc: https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/card-example/card.mind; autoStart: false; uiLoading: no; uiScanning: no; uiError: no;"
+    color-space="sRGB"
+    renderer="colorManagement: true, physicallyCorrectLights"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false">
+    <a-assets>
+      <img id="sample-card" crossorigin="anonymous" src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/card-example/card.png">
+    </a-assets>
+    <a-light type="ambient" color="#ffffff" intensity="1.2"></a-light>
+    <a-light type="directional" color="#ffffff" intensity="0.8" position="-1 2 3"></a-light>
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+    <a-entity id="target" mindar-image-target="targetIndex: 0">
+      <a-entity id="avatar-placeholder" position="0 -0.12 0.2" animation="property: position; to: 0 -0.08 0.2; dur: 1600; easing: easeInOutSine; loop: true; dir: alternate">
+        <a-torus position="0 0.02 0" rotation="90 0 0" radius="0.24" radius-tubular="0.012" color="#d6bb6f"></a-torus>
+        <a-cone position="0 0.25 0" radius-bottom="0.23" radius-top="0.11" height="0.46" color="#0d332e"></a-cone>
+        <a-cylinder position="0 0.53 0" radius="0.13" height="0.12" color="#d6bb6f"></a-cylinder>
+        <a-cylinder position="-0.19 0.42 0" rotation="0 0 34" radius="0.045" height="0.31" color="#0d332e"></a-cylinder>
+        <a-cylinder position="0.19 0.42 0" rotation="0 0 -34" radius="0.045" height="0.31" color="#0d332e"></a-cylinder>
+        <a-sphere position="-0.28 0.29 0.01" radius="0.055" color="#e1b881"></a-sphere>
+        <a-sphere position="0.28 0.29 0.01" radius="0.055" color="#e1b881"></a-sphere>
+        <a-sphere position="0 0.76 0" scale="0.19 0.23 0.15" color="#071b19"></a-sphere>
+        <a-sphere position="0 0.74 0.12" scale="0.125 0.16 0.075" color="#e1b881"></a-sphere>
+        <a-sphere position="-0.043 0.77 0.19" radius="0.012" color="#071b19"></a-sphere>
+        <a-sphere position="0.043 0.77 0.19" radius="0.012" color="#071b19"></a-sphere>
+        <a-sphere position="0 0.70 0.19" scale="0.026 0.009 0.008" color="#8d4b42"></a-sphere>
+        <a-torus position="0 1.04 0" rotation="90 0 0" radius="0.18" radius-tubular="0.012" color="#d6bb6f"></a-torus>
+      </a-entity>
+    </a-entity>
+  </a-scene>
+  <script>
+    const status = document.getElementById('status');
+    const target = document.getElementById('target');
+    const scene = document.querySelector('a-scene');
+    const startButton = document.getElementById('start-ar');
+    target.addEventListener('targetFound', () => { status.textContent = 'تم العثور على العلامة — حرّكي الهاتف ببطء لمشاهدة الأفاتار فوقها.'; });
+    target.addEventListener('targetLost', () => { status.textContent = 'وجّهي الكاميرا إلى بطاقة الاختبار لإظهار الأفاتار.'; });
+    let arReadySeen = false;
+    scene.addEventListener('arReady', () => {
+      arReadySeen = true;
+      status.textContent = 'الكاميرا تعمل الآن — وجّهيها إلى بطاقة الاختبار المطبوعة.';
+      document.querySelector('.intro').hidden = true;
+      startButton.hidden = true;
+    });
+    scene.addEventListener('arError', (event) => {
+      const detail = event.detail?.error || event.detail?.message || '';
+      console.error('MindAR camera error:', event.detail);
+      status.textContent = detail ? `تعذّر تشغيل الكاميرا: ${detail}` : 'تعذّر تشغيل الكاميرا. تحققي من إذن الموقع وافتحي الرابط مباشرةً في Chrome أو Safari.';
+      startButton.disabled = false;
+    });
+    function readableCameraError(error) {
+      const name = error?.name || '';
+      const messages = {
+        NotAllowedError: 'رفض المتصفح إذن الكاميرا. اسمحي به من إعدادات الموقع ثم أعيدي المحاولة.',
+        PermissionDeniedError: 'إذن الكاميرا غير مسموح. اسمحي به من إعدادات الموقع ثم أعيدي المحاولة.',
+        NotFoundError: 'لم يُعثر على كاميرا متاحة في هذا الجهاز.',
+        NotReadableError: 'الكاميرا مشغولة بتطبيق آخر. أغلقي التطبيقات التي تستخدمها ثم أعيدي المحاولة.',
+        OverconstrainedError: 'تعذّر اختيار الكاميرا الخلفية؛ جرّبي إعادة المحاولة أو استخدام كاميرا أخرى.'
+      };
+      return messages[name] || (error?.message ? `تعذّر تشغيل الكاميرا (${name || 'خطأ'}): ${error.message}` : 'لم تصل الصفحة إلى حالة جاهزية الكاميرا. تأكدي من الإذن وافتحي الرابط في المتصفح مباشرةً.');
+    }
+    startButton.addEventListener('click', async () => {
+      const arSystem = scene.systems['mindar-image-system'];
+      if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+        status.textContent = 'المتصفح لا يتيح الكاميرا لهذه الصفحة. افتحي رابط HTTPS مباشرةً في Chrome أو Safari، لا داخل تطبيق QR أو واتساب.';
+        return;
+      }
+      if (!arSystem) {
+        status.textContent = 'لم تُحمّل مكتبة الواقع المعزّز. تحققي من اتصال الإنترنت ثم أعيدي فتح الصفحة.';
+        return;
+      }
+      arReadySeen = false;
+      startButton.disabled = true;
+      status.textContent = 'جارٍ تشغيل الكاميرا… انتظري طلب الإذن، ثم اختاري «السماح».';
+      let readyTimer;
+      const readyPromise = new Promise((resolve, reject) => {
+        const onReady = () => { cleanup(); resolve(); };
+        const onError = (event) => { cleanup(); reject(event.detail?.error || new Error(event.detail?.message || 'تعذّر بدء الكاميرا')); };
+        const cleanup = () => {
+          clearTimeout(readyTimer);
+          scene.removeEventListener('arReady', onReady);
+          scene.removeEventListener('arError', onError);
+        };
+        scene.addEventListener('arReady', onReady, { once: true });
+        scene.addEventListener('arError', onError, { once: true });
+        readyTimer = setTimeout(() => { cleanup(); reject(new Error('لم تصل إشارة جاهزية الكاميرا خلال 12 ثانية.')); }, 12000);
+      });
+      try {
+        const startPromise = arSystem.start();
+        await Promise.all([startPromise, readyPromise]);
+      } catch (error) {
+        console.error('MindAR start failed:', error);
+        if (!arReadySeen) {
+          status.textContent = readableCameraError(error);
+          startButton.disabled = false;
+        }
+      }
+    });
+  </script>
+</body>
+</html>
