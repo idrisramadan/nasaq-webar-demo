@@ -68,20 +68,65 @@
     const startButton = document.getElementById('start-ar');
     target.addEventListener('targetFound', () => { status.textContent = 'تم العثور على العلامة — حرّكي الهاتف ببطء لمشاهدة الأفاتار فوقها.'; });
     target.addEventListener('targetLost', () => { status.textContent = 'وجّهي الكاميرا إلى بطاقة الاختبار لإظهار الأفاتار.'; });
-    scene.addEventListener('arReady', () => { status.textContent = 'الكاميرا جاهزة — وجّهي الهاتف إلى بطاقة الاختبار المطبوعة.'; startButton.hidden = true; });
-    scene.addEventListener('arError', () => { status.textContent = 'تعذّر تشغيل الكاميرا. اسمحي بإذن الكاميرا من إعدادات الموقع، ثم أعيدي المحاولة.'; startButton.disabled = false; });
+    let arReadySeen = false;
+    scene.addEventListener('arReady', () => {
+      arReadySeen = true;
+      status.textContent = 'الكاميرا تعمل الآن — وجّهيها إلى بطاقة الاختبار المطبوعة.';
+      document.querySelector('.intro').hidden = true;
+      startButton.hidden = true;
+    });
+    scene.addEventListener('arError', (event) => {
+      const detail = event.detail?.error || event.detail?.message || '';
+      console.error('MindAR camera error:', event.detail);
+      status.textContent = detail ? `تعذّر تشغيل الكاميرا: ${detail}` : 'تعذّر تشغيل الكاميرا. تحققي من إذن الموقع وافتحي الرابط مباشرةً في Chrome أو Safari.';
+      startButton.disabled = false;
+    });
+    function readableCameraError(error) {
+      const name = error?.name || '';
+      const messages = {
+        NotAllowedError: 'رفض المتصفح إذن الكاميرا. اسمحي به من إعدادات الموقع ثم أعيدي المحاولة.',
+        PermissionDeniedError: 'إذن الكاميرا غير مسموح. اسمحي به من إعدادات الموقع ثم أعيدي المحاولة.',
+        NotFoundError: 'لم يُعثر على كاميرا متاحة في هذا الجهاز.',
+        NotReadableError: 'الكاميرا مشغولة بتطبيق آخر. أغلقي التطبيقات التي تستخدمها ثم أعيدي المحاولة.',
+        OverconstrainedError: 'تعذّر اختيار الكاميرا الخلفية؛ جرّبي إعادة المحاولة أو استخدام كاميرا أخرى.'
+      };
+      return messages[name] || (error?.message ? `تعذّر تشغيل الكاميرا (${name || 'خطأ'}): ${error.message}` : 'لم تصل الصفحة إلى حالة جاهزية الكاميرا. تأكدي من الإذن وافتحي الرابط في المتصفح مباشرةً.');
+    }
     startButton.addEventListener('click', async () => {
       const arSystem = scene.systems['mindar-image-system'];
-      if (!arSystem) { status.textContent = 'الصفحة لم تكتمل بعد. انتظري قليلًا ثم أعيدي المحاولة.'; return; }
+      if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+        status.textContent = 'المتصفح لا يتيح الكاميرا لهذه الصفحة. افتحي رابط HTTPS مباشرةً في Chrome أو Safari، لا داخل تطبيق QR أو واتساب.';
+        return;
+      }
+      if (!arSystem) {
+        status.textContent = 'لم تُحمّل مكتبة الواقع المعزّز. تحققي من اتصال الإنترنت ثم أعيدي فتح الصفحة.';
+        return;
+      }
+      arReadySeen = false;
       startButton.disabled = true;
-      status.textContent = 'جارٍ طلب إذن الكاميرا… اختاري «السماح» إذا ظهر الطلب.';
+      status.textContent = 'جارٍ تشغيل الكاميرا… انتظري طلب الإذن، ثم اختاري «السماح».';
+      let readyTimer;
+      const readyPromise = new Promise((resolve, reject) => {
+        const onReady = () => { cleanup(); resolve(); };
+        const onError = (event) => { cleanup(); reject(event.detail?.error || new Error(event.detail?.message || 'تعذّر بدء الكاميرا')); };
+        const cleanup = () => {
+          clearTimeout(readyTimer);
+          scene.removeEventListener('arReady', onReady);
+          scene.removeEventListener('arError', onError);
+        };
+        scene.addEventListener('arReady', onReady, { once: true });
+        scene.addEventListener('arError', onError, { once: true });
+        readyTimer = setTimeout(() => { cleanup(); reject(new Error('لم تصل إشارة جاهزية الكاميرا خلال 12 ثانية.')); }, 12000);
+      });
       try {
-        await arSystem.start();
-        status.textContent = 'بدأ تشغيل الكاميرا — وجّهيها إلى بطاقة الاختبار المطبوعة.';
+        const startPromise = arSystem.start();
+        await Promise.all([startPromise, readyPromise]);
       } catch (error) {
         console.error('MindAR start failed:', error);
-        status.textContent = 'لم تبدأ الكاميرا. تحققي من إذن الموقع واستخدمي Chrome أو Safari عبر HTTPS.';
-        startButton.disabled = false;
+        if (!arReadySeen) {
+          status.textContent = readableCameraError(error);
+          startButton.disabled = false;
+        }
       }
     });
   </script>
